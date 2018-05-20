@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>延迟加载</title>
+	<style type="text/css">
+		*{
+            margin: 0;
+            padding: 0;
+        }
+        ul{
+            list-style: none;
+        }
+        li{
+           width: 100%;
+           margin:10px;
+           height: 70px;
+           border-bottom: 1px dashed rgba(212, 212, 212, 0.31);
+        }
+        li #lazy{
+            width: 70px;
+            height: 60px;
+            background: url("img/loading.gif") no-repeat center;
+            background-size: cover;
+            float: left;
+            margin-right:10px;
+        }
+        li .content p{
+            line-height: 3;
+            font-size: 14px;
+        }
+        li #lazy img{
+            width: 70px;
+            height: 60px;
+            opacity: 0;
+        }
+	</style>
+</head>
+<body>
+	<ul id='box'></ul>
+<script type="text/javascript" src='data.json'></script>
+<script type="text/javascript" src='utils.js'></script>
+<script type="text/javascript">
+	// 顺序
+	// 获取元素
+	// 获取数据通过ajax
+	// 绑定到标签
+	// 循环图片并进行延迟加载
+	// 渐变显示图片
+
+
+	class ImgLoad{
+		constructor(){
+			// data 为 json 数据
+			this.DATA = data;
+			this.STR = '';
+			this.IMG = document.getElementsByTagName('img');
+			this.TIMER = null;
+		};
+		// 创建元素
+		creatDom(){
+			for(let i = 0;i < this.DATA.length; i++){
+				let cur = this.DATA[i];
+				this.STR  += `
+					<li>
+				        <div id="lazy">
+				            <img src="" alt="" ref='./img/${cur.img}' />
+				        </div>
+				        <div class="content">
+				            <p>${cur.title}</p>
+				        </div>
+				    </li>
+				`;
+			}
+			document.getElementById('box').innerHTML = this.STR;
+		};
+		refImg(){
+			for(let i=0;i<this.IMG.length;i++){
+				// 为每一个元素调用延迟加载
+				this.lazyImg(i);
+			}
+		};
+		// 图片延迟
+		lazyImg(i){
+			let _this = this;
+			let curImg = this.IMG[i];
+			// 防止重复加载
+			if (curImg.load) return;
+			// 当图片已完全露出来之后才加载
+			if(document.documentElement.clientHeight + document.documentElement.scrollTop >= curImg.offsetHeight + utils.offset(curImg).top){
+				let newImg = new Image();
+				newImg.src = curImg.getAttribute('ref');
+				newImg.onload = function(){
+					curImg.src = this.src;
+					// 定义一个标识符  记录此图片已经被加载过了
+					curImg.load = true;
+					// 为每张图片应用渐现效果
+					_this.fandIn(curImg);
+					// 不用了 释放资源
+					curImg = null;
+				}
+			}
+		};
+		fandIn(cur){
+			let op = Number(window.getComputedStyle(cur)['opacity']);
+			this.TIMER = window.setInterval(function(){
+				if(op >= 1) {
+					window.clearInterval(this.TIMER);
+					cur.style.opacity = 1;
+					return;
+				};
+				op += 0.01;
+				cur.style.opacity = op;
+			},20)
+
+		};
+		handle(){
+			window.onscroll = ()=>{this.refImg()};
+		};
+		init(){
+			this.handle();
+			this.creatDom();
+			this.refImg();
+		}
+	};
+	new ImgLoad().init();
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
